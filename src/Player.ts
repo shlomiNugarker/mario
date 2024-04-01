@@ -29,7 +29,7 @@ export class Player {
     this.width = 16
     this.height = 16
     this.x = 0
-    this.y = this.game.height - 16
+    this.y = this.game.ground
     this.speed = 6
 
     this.image = document.getElementById('sprite') as HTMLImageElement
@@ -112,8 +112,9 @@ export class Player {
     if (!this.isOnGround() && !this.isJumping) {
       this.y += this.game.gravity
     }
+
     if (this.isJumping) {
-      this.y -= 5
+      this.y -= 1.5 * this.speed
       if (this.jumpFromY - this.y > this.jumpHight) {
         this.isJumping = false
       }
@@ -157,7 +158,11 @@ export class Player {
   }
 
   isOnGround() {
-    return this.y >= this.game.height - 16
+    if (this.y >= this.game.ground) {
+      this.y = this.game.ground
+      return true
+    }
+    return false
   }
 
   handleSpriteAnimation(deltaTime: number) {

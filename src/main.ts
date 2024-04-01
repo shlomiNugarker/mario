@@ -6,14 +6,19 @@ export class Game {
   width: number
   height: number
   gravity: number
+  ground: number
   input: InputHandler
   player: Player
+  ctx: CanvasRenderingContext2D
+  skyColor = 'lightBlue'
 
-  constructor(width: number, height: number) {
+  constructor(width: number, height: number, ctx: CanvasRenderingContext2D) {
+    this.ctx = ctx
     this.width = width
     this.height = height
     this.gravity = 5
-    this.input = new InputHandler(this)
+    this.ground = this.height - 16
+    this.input = new InputHandler()
     this.player = new Player(this)
   }
 
@@ -21,8 +26,8 @@ export class Game {
     this.player.update(this.input.keys, deltaTime)
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
-    this.player.draw(ctx)
+  draw() {
+    this.player.draw(this.ctx)
   }
 }
 
@@ -31,7 +36,7 @@ const ctx = canvas.getContext('2d')!
 canvas.width = 900
 canvas.height = 500
 
-const game = new Game(canvas.width, canvas.height)
+const game = new Game(canvas.width, canvas.height, ctx)
 
 let lastTime = 0
 function animate(timeStamp: number) {
@@ -39,7 +44,9 @@ function animate(timeStamp: number) {
   lastTime = timeStamp
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   game.update(deltaTime)
-  game.draw(ctx)
+  ctx.fillStyle = game.skyColor
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  game.draw()
   requestAnimationFrame(animate)
 }
 
