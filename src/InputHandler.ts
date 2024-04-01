@@ -1,12 +1,9 @@
-import { Game } from './main'
-
 export class InputHandler {
   keys: string[]
-  game: Game
 
-  constructor(game: Game) {
+  constructor() {
     this.keys = []
-    this.game = game
+
     window.addEventListener('keydown', (ev) => {
       if (
         (ev.key === 'ArrowDown' ||
