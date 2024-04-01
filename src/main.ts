@@ -5,12 +5,14 @@ import { Player } from './Player'
 export class Game {
   width: number
   height: number
+  gravity: number
   input: InputHandler
   player: Player
 
   constructor(width: number, height: number) {
     this.width = width
     this.height = height
+    this.gravity = 5
     this.input = new InputHandler(this)
     this.player = new Player(this)
   }

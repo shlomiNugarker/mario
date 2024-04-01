@@ -18,7 +18,10 @@ export class Player {
   frameInterval: number
   frameTimer: number
 
-  currState: 'STANDING' | 'RUNNING' | 'JUMPING'
+  state: 'STANDING' | 'RUNNING' | 'JUMPING' | 'FALLING'
+  isJumping: boolean
+  jumpHight: number
+  jumpFromY: number
 
   constructor(game: Game) {
     this.game = game
@@ -30,7 +33,7 @@ export class Player {
     this.speed = 6
 
     this.image = document.getElementById('sprite') as HTMLImageElement
-    this.frameX = 5
+    this.frameX = 0
     this.frameY = 5.5
     this.maxFrame = 0
 
@@ -38,15 +41,19 @@ export class Player {
     this.frameInterval = 1000 / this.fps
     this.frameTimer = 0
 
-    this.currState = 'STANDING'
+    this.state = 'STANDING'
+
+    this.isJumping = false
+    this.jumpHight = 70
+    this.jumpFromY = this.y
   }
 
   update(input: string[], deltaTime: number) {
-    this.handleFrameAnimation(input)
+    this.move(input)
     this.handleSpriteAnimation(deltaTime)
   }
 
-  setFrame(state: 'STANDING' | 'RUNNING' | 'JUMPING') {
+  setFrame(state: 'STANDING' | 'RUNNING' | 'JUMPING' | 'FALLING') {
     switch (state) {
       case 'STANDING':
         {
@@ -65,6 +72,14 @@ export class Player {
         break
 
       case 'JUMPING':
+        {
+          this.frameX = 5
+          this.frameY = 5.5
+          this.maxFrame = 0
+        }
+        break
+
+      case 'FALLING':
         {
           this.frameX = 5
           this.frameY = 5.5
@@ -93,31 +108,51 @@ export class Player {
     )
   }
 
-  handleFrameAnimation(input: string[]) {
-    if (input.includes('ArrowRight')) {
-      if (this.currState !== 'RUNNING') this.setFrame('RUNNING')
-      this.currState = 'RUNNING'
-      this.x += 5
+  move(input: string[]) {
+    if (!this.isOnGround() && !this.isJumping) {
+      this.y += this.game.gravity
     }
-    if (input.includes('ArrowLeft')) {
-      if (this.currState !== 'RUNNING') this.setFrame('RUNNING')
-      this.currState = 'RUNNING'
-      this.x -= 5
-    }
-    if (input.includes('ArrowUp')) {
-      if (this.currState !== 'JUMPING') this.setFrame('JUMPING')
-      this.currState = 'JUMPING'
-      this.y -= 6
-    }
-    if (input.includes('ArrowDown')) {
-      if (!this.isOnGround()) {
-        this.y += 6
+    if (this.isJumping) {
+      this.y -= 5
+      if (this.jumpFromY - this.y > this.jumpHight) {
+        this.isJumping = false
       }
-    } else {
-      if (this.currState !== 'STANDING') {
+    }
+
+    if (input.length) {
+      if (input.includes('ArrowRight')) {
+        if (this.state !== 'RUNNING') this.setFrame('RUNNING')
+        this.state = 'RUNNING'
+        this.x += 5
+      }
+
+      if (input.includes('ArrowLeft')) {
+        if (this.state !== 'RUNNING') this.setFrame('RUNNING')
+        this.state = 'RUNNING'
+        this.x -= 5
+      }
+
+      if (input.includes('ArrowUp') && this.isOnGround()) {
+        if (this.state !== 'JUMPING') {
+          this.state = 'JUMPING'
+          this.setFrame('JUMPING')
+          this.jumpFromY = this.y
+          this.isJumping = true
+        }
+      }
+
+      if (input.includes('ArrowDown')) {
+        if (this.state !== 'FALLING') {
+          this.state = 'FALLING'
+          this.setFrame('FALLING')
+        }
+      }
+    } else if (input.length === 0) {
+      if (this.state !== 'STANDING') {
+        this.state = 'STANDING'
         this.setFrame('STANDING')
-        this.currState = 'STANDING'
       }
+      if (this.isJumping) this.isJumping = false
     }
   }
 
@@ -128,10 +163,11 @@ export class Player {
   handleSpriteAnimation(deltaTime: number) {
     if (this.frameTimer > this.frameInterval) {
       this.frameTimer = 0
-      if (this.frameX < this.maxFrame) this.frameX++
-      else {
-        if (this.currState === 'JUMPING') this.frameX = 5
-        else this.frameX = 0
+      if (this.frameX < this.maxFrame) {
+        this.frameX++
+      } else {
+        if (this.state === 'JUMPING') this.frameX = 5
+        else if (this.state !== 'FALLING') this.frameX = 0
       }
     } else {
       this.frameTimer += deltaTime
